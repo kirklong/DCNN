@@ -16,8 +16,8 @@ pred = m(X) #generate the prediction from the model
 ```
 Similarly if you wanted to load i.e. the sample 1D model trained on missing data you would write: `m = load_CNN_ensemble((1001,1,2^6),fname="1DModelSamples/missing.jld2",nDim=1,maxChannels=32)`. 
 Sample 1D and 2D models are provided in their respective directories. They are further detailed in the paper, but in summary all of the 1D models were trained on lightcurves with 1001 time samples (i.e. daily observational cadence for 1001 days), 
-with the "missing" models trained on data with random observational gaps totaling 10% of those 1001 samples. The 2D "normal" and "missing" models were similarly trained with the additional information from 25 velocity channel bins. The 2D "transfer" 
-model was trained on much "worse" data extracted from a simulated observational campaign with just $\sim$ 100 lightcurve observations that were interpolated to match the 1001 samples in the other models. Finally, the 2D "highResTransfer" 
+with the "missing" models trained on data with random observational gaps totaling 10% of those 1001 samples. The 2D "normal" model were similarly trained with the additional information from 25 velocity channel bins. The 2D "transfer" 
+model was trained on much "worse" data extracted from a simulated observational campaign with just $\sim$ 100 lightcurve observations that were interpolated to match the 1001 samples in the other models, with 10% of those interpolated data points dropped in analogy to the 1D "missing" case. Finally, the 2D "highResTransfer" 
 was trained in the same way as the "transfer" model but with 50 velocity channels (higher resolution) instead of 25. Just a single model from each ensemble is provided due to storage constraints, but if you would like access to more members of the 
 ensemble for your work please feel free to email me and I will send them to you. Similarly the training/validation sets used in training these models are too large to host here, but are available on request through email or you can easily generate your 
 own that should be statistically similar to those used in the paper with the code in this repository.
