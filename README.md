@@ -1,6 +1,6 @@
-# (D)CNN implementation as in Long+ 2026
+# (D)CNN implementation as in [Long+ 2026](https://arxiv.org/pdf/2512.24433)
 
-These files are all that is necessary to create your own custom (D)CNNs to replicate the results shown in Long+ 2026 or fine-tune your own models for your own research tasks. 
+These files are all that is necessary to create your own custom (D)CNNs to replicate the results shown in [Long+ 2026](https://arxiv.org/pdf/2512.24433) or fine-tune your own models for your own research tasks. 
 
 ## Usage
 To train a model from scratch, start a `julia` session in the same folder as which you have cloned this repository and simply type `include("ensemble.jl")` followed by `main()`. This will use the default settings to generate synthetic data and then train 
