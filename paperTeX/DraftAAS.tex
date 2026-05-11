@@ -11,7 +11,6 @@
 \hyphenpenalty 5
 
 \newcommand{\vdag}{(v)^\dagger}
-\newcommand{\new}[1]{{\color{red}#1}}
 \newcommand*\dif{\mathop{}\!\mathrm{d}}
 \newcommand\aastex{AAS\TeX}
 \newcommand\latex{La\TeX}
@@ -81,10 +80,10 @@ where $\mathcal{F}$ denotes the Fourier transform and $\mathcal{F}^{-1}$ its inv
 Here we describe a new method for solving this inversion problem using a Convolutional Neural Network (CNN). CNNs have long been successfully used for image deconvolution both in industry \citep{industry1_Li2021,industry2_DLGEO,MicrosoftLenovoDeconv} and astronomy \citep{Herbel_2018_ASTRO_PSFDL,Akhaury22_DL_GALDECONV}, but an analogous approach has yet to be applied to the deconvolution of BLR RM data. This approach is strongly physically and mathematically motivated. Decades of RM measurements have robustly shown that $\Delta C$,$\Delta L$, and $\Psi$ are connected, but the precise relationship is muddled by various physical and systematic sources of noise. As shown in the boxed form of Equation \ref{deconv}, an equivalent way of thinking about the recovery of $\Psi$ is that we are looking to find some complicated function of $\Delta C$ that we can convolve with $\Delta L$. 
 
 A CNN is designed precisely with this task in mind: the network essentially ``learns" the potentially complex and highly nonlinear function $f(\Delta C)$ as the optimized weights are convolved with the input emission-line light curves to map back to the target response function. Thus the continuum and all of the errors both physical and systematic are absorbed into the parameters of the CNN, and in this approach what the CNN learns is what should be convolved with the input lightcurve to generate the correct transfer function. Because of the nature of the fundamental mathematical operation we are trying to approximate, we refer to this class of ML model as a (de)convolutional neural network ((D)CNN) throughout the rest of this paper.
-\new{We choose a CNN instead of a standard fully connected neural network because of the mathematics of the problem as described above, as standard fully connected 
-neural networks do not learn convolutional filters and thus struggle with spatial and temporal pattern recognition.}
-Another ML technique\textemdash variational autoencoders\textemdash has recently shown promise for recovering response functions for AGN coronae from X-ray lightcurves \citep{Deesamutara_AndyYoung_2025_ML_RM_XRAY}, further motivating an ML application to the BLR RM inversion problem, \new{although the data quality is high enough in the BLR that 
-we choose the more direct CNN approach here.}
+We choose a CNN instead of a standard fully connected neural network because of the mathematics of the problem as described above, as standard fully connected
+neural networks do not learn convolutional filters and thus struggle with spatial and temporal pattern recognition.
+Another ML technique\textemdash variational autoencoders\textemdash has recently shown promise for recovering response functions for AGN coronae from X-ray lightcurves \citep{Deesamutara_AndyYoung_2025_ML_RM_XRAY}, further motivating an ML application to the BLR RM inversion problem, although the data quality is high enough in the BLR that
+we choose the more direct CNN approach here.
 
 In RM the relationship between line and continuum variations may well be more complicated than the linearized echo model in Equation \ref{variabilityEqn} \citep{Krolik1995_regularizedLinearInversion}. Additionally, traditional methods are computationally expensive, and while a (D)CNN is computationally expensive to train it is extremely cheap to use once trained. This strongly motivates the work described here, in which we use (D)CNNs to recover $\Psi$. Using a (D)CNN method allows for much more robust flexibility in obtaining $\Psi$ as in even our simplest models described here there are millions of parameters, but this flexibility comes at the cost of interpretability. The (D)CNN is somewhat of a black box, although we attempt to mitigate (largely unsuccessfully) this interpretability problem in Section \ref{sec:discussion}.
 
@@ -112,7 +111,7 @@ damped random walks are likely an oversimplification of the true variability of 
     \item A distribution of $\Psi$ drawn from an analytic $\Psi$ for a face-on accretion disk. While the accretion disk signal likely does not extend to the BLR, we include this as it is another nice representative ``picture'' of how gas can respond to changes in the continuum, and in the hope that the model may be able to learn to disentangle contributions from the accretion disk that may contaminate BLR measurements and vice versa. The assumptions and formulations of this accretion disk model are shown in Section \ref{sec:KDM} in the \hyperref[appendix]{Appendix}.
     \item A distribution of $\Psi$ drawn from simple kinematic disk, cloud, and combined models of the BLR similar to those described in \cite{Long_2023} and \cite{Long_2025}.
 \end{enumerate}
-\new{The full parameter ranges used to generate each class of 1D and 2D transfer function are summarized in Tables~\ref{tab:1Dparams} and~\ref{tab:2Dparams} in the \hyperref[appendix]{Appendix}.}
+The full parameter ranges used to generate each class of 1D and 2D transfer function are summarized in Tables~\ref{tab:1Dparams} and~\ref{tab:2Dparams} in the \hyperref[appendix]{Appendix}.
 \begin{figure}
     \centering
     \includegraphics[width=0.48\textwidth,keepaspectratio]{PsiLPExamples.pdf}
@@ -121,14 +120,14 @@ damped random walks are likely an oversimplification of the true variability of 
 \end{figure}
 In addition to generating samples independently, all three of these sources of $\Psi$ are also randomly added in combination to each other to generate additional samples, such that one lightcurve could be generated from say a basis shape alone or a basis shape in combination with a kinematic BLR model or a basis shape in combination with both a kinematic disk model and an analytic accretion disk model. The training set is generated such that the gaussian, ellipse, exponential, and accretion disk samples represent $1/16$ of the total training samples each, the BLR and disk-wind choices represent $1/8$ of the total training samples each, and examples that are random combinations of those existing subsets represent $1/2$ of the total training samples.\footnote{The full training sets are $\sim 50$ GB per scenario and thus cannot be cheaply hosted on the internet at this time, but all are available on request from the author.} 
 
-All the resulting transfer functions are normalized, as we are asking the model to predict their shapes and not their intensities relative to each other. \new{This is because we train on simple geometric, kinematic, and pictorial prescriptions for the BLR without detailed gas physics, thus our normalized model predictions can only place constraints on the geometry and kinematics of the BLR and not further constrain properties of the gas. In the future including training samples with more realistic radiative transfer effects would allow us to also recover the true amplitudes of the response, which is a key goal for future work but outside of the scope of this demonstration paper.} One other important thing to note here is that the (D)CNN architecture requires that all inputs have the same size, thus when feeding it real data after training one must also match that expected shape. This means that either the training set should be generated to be the same expected size as the data or that one will have to interpolate the real data to be the same size as the training set lightcurves were. \new{While we believe this training set represents good coverage of plausible BLR transfer function shapes, there are of course many models of the BLR in the literature which we have omitted for simplicity and ease of computation but could include in future iterations of this idea \citep[i.e.][to name just a few]{WATERS16,Mangham2019,ChajetHall2013,Flohic2012}.}
+All the resulting transfer functions are normalized, as we are asking the model to predict their shapes and not their intensities relative to each other. This is because we train on simple geometric, kinematic, and pictorial prescriptions for the BLR without detailed gas physics, thus our normalized model predictions can only place constraints on the geometry and kinematics of the BLR and not further constrain properties of the gas. In the future including training samples with more realistic radiative transfer effects would allow us to also recover the true amplitudes of the response, which is a key goal for future work but outside of the scope of this demonstration paper. One other important thing to note here is that the (D)CNN architecture requires that all inputs have the same size, thus when feeding it real data after training one must also match that expected shape. This means that either the training set should be generated to be the same expected size as the data or that one will have to interpolate the real data to be the same size as the training set lightcurves were. While we believe this training set represents good coverage of plausible BLR transfer function shapes, there are of course many models of the BLR in the literature which we have omitted for simplicity and ease of computation but could include in future iterations of this idea \citep[i.e.][to name just a few]{WATERS16,Mangham2019,ChajetHall2013,Flohic2012}.
 
 We then train an ensemble of $\sim$ 100 (D)CNNs on our fake data, splitting it into 70\% training and 30\% testing data subsets. Each model is initialized with random Glorot normal \citep{glorot_2010} weights and is trained using the Adam optimizer with a learning rate of $\sim10^{-4}$, a value found experimentally to produce good results. We use a simple mean square error loss function to evaluate each model during training, which is evaluated with gradient descent optimization until each model arrives at some local minimum in the loss function. Each model is trained for a variable number of epochs, with the training automatically stopping when one of the following conditions is reached: 
 \begin{enumerate}
     \item We compare the average training loss of the last five epochs with the average loss of the five before that. If there is no change or the average is increasing we stop training.
     \item We perform a similar test for the loss on the validation set and similarly stop training if the average validation loss across the five window average flattens out or increases, as this indicates the model may be overfitting to the training data. Note that although we evaluate the performance of the loss function on the validation data the model never sees this data in each gradient descent update, thus the training is blind to the validation set except in this autostopping routine. 
 \end{enumerate}
-During training we create checkpoints of our model state every time the validation loss reaches a previously unseen low, and reverts to the last saved checkpoint in case training is stopped before the maximum number of epochs is reached. The choice of using the previous five epochs in this way for the autostop criteria is arbitrary and was chosen experimentally as it provided a good balance of allowing enough chances for the model to ``escape" a local minima it may have stalled out in versus wasting computational resources when it truly has found the best solution for its initial conditions and optimization rate. In general we find that each model trains for $\sim 50$ epochs before this autostop criterion is usually triggered. Example training and validation loss curves are shown in Figures \ref{fig:2Dcombined}, \ref{fig:2Dtransfer}, and \ref{fig:2Dtest} that demonstrate this autostop criterion visually. \new{We tested learning rates in the range $10^{-2}$--$10^{-4}$ and found through trial and error that $1.5\times10^{-4}$ produced the best results. A complete summary of the (D)CNN hyperparameters is given in Table~\ref{tab:hyperparams} in the \hyperref[appendix]{Appendix}.}
+During training we create checkpoints of our model state every time the validation loss reaches a previously unseen low, and reverts to the last saved checkpoint in case training is stopped before the maximum number of epochs is reached. The choice of using the previous five epochs in this way for the autostop criteria is arbitrary and was chosen experimentally as it provided a good balance of allowing enough chances for the model to ``escape" a local minima it may have stalled out in versus wasting computational resources when it truly has found the best solution for its initial conditions and optimization rate. In general we find that each model trains for $\sim 50$ epochs before this autostop criterion is usually triggered. Example training and validation loss curves are shown in Figures \ref{fig:2Dcombined}, \ref{fig:2Dtransfer}, and \ref{fig:2Dtest} that demonstrate this autostop criterion visually. We tested learning rates in the range $10^{-2}$--$10^{-4}$ and found through trial and error that $1.5\times10^{-4}$ produced the best results. A complete summary of the (D)CNN hyperparameters is given in Table~\ref{tab:hyperparams} in the \hyperref[appendix]{Appendix}.
 
 After each model in our ensemble has been trained we generate a distribution of their final validation losses and remove any models that are significant poorly-performing outliers by removing any models that perform worse than a standard deviation away from the mean validation loss. This cut is again chosen arbitrarily but is done to remove models that did not learn very much about the problem due to their initial conditions and/or learning rates as well as to penalize models that overfit the data without generalizing what they learned to the broader scope of the problem. In general in imposing this cut we usually end up keeping $\sim 20-40$ of the original 100 trained models.
 
@@ -165,7 +164,7 @@ The error bars on the (D)CNN model predictions are generated by having the ensem
 
 This is one advantage of the (D)CNN methodology\textemdash when training an ensemble of models it is easy and cheap to generate uncertainties directly, whereas while an individual run of \texttt{MEMEcho} is relatively fast generating uncertainties is much slower as the algorithm must be run many times over. It is encouraging that the (D)CNN method error bars look realistic in that the models are more unsure when the data quality is worse, and the places it is most unsure are where there are sharp features in the data. Importantly, in all three cases the ground truth is nearly always captured by the (D)CNN error bars. 
 
-\new{We also test our models for systematic biases across the entire test set by comparing how accurate the mean delays ($\tau$ centroid, first moment) and delay widths (second moment) from the ground truth vs. the (D)CNN ensemble prediction. In doing so we see that our 1D models almost never overpredict the mean delay $\bar{\tau}$ and are instead systematically biased slightly towards underpredicting $\bar{\tau}$. As expected, this is a more significant problem at larger $\bar{\tau}$. We find that the models also systematically underestimate the widths $\sigma_\tau$ of the transfer functions, and that this is correlated with the underprediction of $\bar{\tau}$. A full discussion on the systematic biases as well as plots showcasing the regimes where the models are likely to have biases is available in Section~\ref{sec:bias} in the \hyperref[appendix]{Appendix} (Figures~\ref{fig:bias1Dscatter} and \ref{fig:bias1Dhist}).}
+We also test our models for systematic biases across the entire test set by comparing how accurate the mean delays ($\tau$ centroid, first moment) and delay widths (second moment) from the ground truth vs. the (D)CNN ensemble prediction. In doing so we see that our 1D models almost never overpredict the mean delay $\bar{\tau}$ and are instead systematically biased slightly towards underpredicting $\bar{\tau}$. As expected, this is a more significant problem at larger $\bar{\tau}$, and is thus likely a limitation of the training set\textemdash which have lightcurves of fixed duration\textemdash and not of the method itself. We find that the models also systematically underestimate the widths $\sigma_\tau$ of the transfer functions, and that this is correlated with the underprediction of $\bar{\tau}$. A full discussion on the systematic biases as well as plots showcasing the regimes where the models are likely to have biases is available in Section~\ref{sec:bias} in the \hyperref[appendix]{Appendix} (Figures~\ref{fig:bias1Dscatter} and \ref{fig:bias1Dhist}).
 
 \section{2D test cases}\label{sec:2D}
 
@@ -204,9 +203,9 @@ As Figure \ref{fig:2Derrordist} shows, in general the ``shape" basis functions a
 
 The bottom right panel (g) of Figure \ref{fig:2Dcombined} verifies that our models do not overfit the data and our training procedure as outlined in Section \ref{sec:models} is working as intended. In particular it is encouraging to see that the morphology of the validation and training curves is nearly identical, which indicates that the models are learning strongly generalizable information about the inversion problem. Note that the relative offset between each curve is a byproduct of the fact that the training set contains more data (70\% of the total) than the validation set (30\% of the total). 
 
-\new{This is just one example inversion, thus we also compute statistics across the entire test set to test if there are any systematic biases. In doing so we find that the 
-models almost never overpredict delays, and instead are systematically biased towards underpredicting delays slightly, especially at longer delays as one would expect. 
-In velocity space we find no systematic biases. A deeper discussion on these biases and plots showcasing their distributions are available in Section~\ref{sec:bias} in the \hyperref[appendix]{Appendix} (Figures~\ref{fig:bias2Dhist} and \ref{fig:bias2Dscatter}).}
+This is just one example inversion, thus we also compute statistics across the entire test set to test if there are any systematic biases. In doing so we find that the
+models almost never overpredict delays, and instead are systematically biased towards underpredicting delays slightly, especially at longer delays as one would expect.
+In velocity space we find no systematic biases. A deeper discussion on these biases and plots showcasing their distributions are available in Section~\ref{sec:bias} in the \hyperref[appendix]{Appendix} (Figures~\ref{fig:bias2Dhist} and \ref{fig:bias2Dscatter}).
 
 \section{Transfer learning}\label{sec:transfer}
 
@@ -245,7 +244,7 @@ While the experiment has since been unblinded when \cite{Mangham2019} was publis
   \label{fig:similarityQSO}
   \vspace{-3mm}
 \end{figure}
-The results of this ``blind test" are shown in Figure\,\ref{fig:2Dtest}, which shows how well the (D)CNN method recovers the shape and distribution of response for this test case. The true response function is shown in Figure 6 of \cite{Mangham2019}\textemdash the (D)CNN correctly identifies the velocity and time locations of peak response and the red-blue asymmetry in the response, but predicts extra power at small delays, underpredicts at longer delays, and does not resolve the features as sharply as they are present in the ground truth. The (D)CNN prediction is thus consistent with the existing \texttt{MEMEcho} recovery shown in Figure 17 of \cite{Mangham2019}, with the largest difference being that the \texttt{MEMEcho} recovery does not show the extra prompt response in the (D)CNN recovery. This extra prompt response near 0 days is physically interesting as this is likely the result of not having entirely subtracted out the continuum signal properly from the line lightcurves, as the training set we use has no continuum contamination. To test this theory we performed an inversion on the lightcurves that were not continuum subtracted\textemdash which are thus dominated by the continuum\textemdash and found that the models only predict a signal similar to this prompt response signal that remains when making a prediction on the de-trended lightcurves. \new{This highlights how important properly de-trending the lightcurves is, as failing to do so results in the continuum variations dominating the inferred response. In the future we could adjust the training set to be more realistic, including contamination from the continuum, and believe this would likely help resolve this ``problem" and make our models less sensitive to this bias.} It also showcases that this method has promise outside of applications directly to the BLR, and could likely be applied to RM in the accretion disk and torus \citep{RM_Review_21}.
+The results of this ``blind test" are shown in Figure\,\ref{fig:2Dtest}, which shows how well the (D)CNN method recovers the shape and distribution of response for this test case. The true response function is shown in Figure 6 of \cite{Mangham2019}\textemdash the (D)CNN correctly identifies the velocity and time locations of peak response and the red-blue asymmetry in the response, but predicts extra power at small delays, underpredicts at longer delays, and does not resolve the features as sharply as they are present in the ground truth. The (D)CNN prediction is thus consistent with the existing \texttt{MEMEcho} recovery shown in Figure 17 of \cite{Mangham2019}, with the largest difference being that the \texttt{MEMEcho} recovery does not show the extra prompt response in the (D)CNN recovery. This extra prompt response near 0 days is physically interesting as this is likely the result of not having entirely subtracted out the continuum signal properly from the line lightcurves, as the training set we use has no continuum contamination. To test this theory we performed an inversion on the lightcurves that were not continuum subtracted\textemdash which are thus dominated by the continuum\textemdash and found that the models only predict a signal similar to this prompt response signal that remains when making a prediction on the de-trended lightcurves. This highlights how important properly de-trending the lightcurves is, as failing to do so results in the continuum variations dominating the inferred response. In the future we could adjust the training set to be more realistic, including contamination from the continuum, and believe this would likely help resolve this ``problem" and make our models less sensitive to this bias. It also showcases that this method has promise outside of applications directly to the BLR, and could likely be applied to RM in the accretion disk and torus \citep{RM_Review_21}.
 
 Figure \ref{fig:similarityQSO} also highlights another potential way to test how confident one should be in a (D)CNN prediction. As shown in the bottom panel of Figure \ref{fig:similarityQSO}, the set of input lightcurves used in generating the (D)CNN prediction are significantly outside the peak of the distribution for what the model was shown in training. This indicates another potential area for improvement as well as a providing a qualitative way to benchmark trust in predictions\textemdash if the models had seen many similar sets of lightcurves in training we may be more confident in its output prediction and vice versa, and additionally we may improve the performance of our models by finding a way to generate samples that are statistically more similar to the data we wish to predict, but this outside the scope of this paper and we leave it for future work.
 
@@ -285,27 +284,25 @@ Given the analysis in Section \ref{sec:interpretability} it may make sense for f
 
 One could also envision tasking the (D)CNN with learning the uncertainty directly\textemdash i.e. learning a mean and standard deviation for each pixel or even the full covariances\textemdash as opposed to estimating the uncertainty with an ensemble of models each making many predictions on noisy data. Note that while this would save significant computational expense the most reliable uncertainty estimate will always come from an ensemble approach due to the inherent nature of the local minima found via gradient descent each time the model is trained.
 
-\new{While the results shown here are promising, this paper is simply a proof of concept of this method and we believe many refinements to this methodology can and should be made before applying to real data. 
-For example, the ``blind'' test (D)CNN inversion shown in Figure \ref{fig:2Dtest} highlights issues that may arise in applying the current version of the (D)CNN method to more realistic data, highlighting the importance of de-trending. 
-The ``blind test'' performed here is also just one possible ``realistic'' BLR, thus in the future we will seek to benchmark our models with a variety of more realistic simulations in addition to this case. 
-Regardless of which more realistic simulations we use, a key improvement in future work will be designing a training set that includes more realistic observational errors and seasonal gaps, 
-as currently our training set includes only simple approximations of these effects. Ideally this would be done in such a way that is informed by the 
-expected data quality and observational cadence of whatever instrument was used to collect the data we wish to apply this method to, 
-thus in the future to obtain the best (D)CNNs may require training for each particular instrument and survey campaign.} 
+While the results shown here are promising, this paper is simply a proof of concept of this method and we believe many refinements to this methodology can and should be made before applying to real data.
+For example, the ``blind'' test (D)CNN inversion shown in Figure \ref{fig:2Dtest} highlights issues that may arise in applying the current version of the (D)CNN method to more realistic data, highlighting the importance of de-trending.
+The ``blind test'' performed here is also just one possible ``realistic'' BLR, thus in the future we will seek to benchmark our models with a variety of more realistic simulations in addition to this case.
+Regardless of which more realistic simulations we use, a key improvement in future work will be designing a training set that includes more realistic observational errors and seasonal gaps,
+as currently our training set includes only simple approximations of these effects. Ideally this would be done in such a way that is informed by the
+expected data quality and observational cadence of whatever instrument was used to collect the data we wish to apply this method to,
+thus in the future to obtain the best (D)CNNs may require training for each particular instrument and survey campaign.
 
 Figure \ref{fig:similarityQSO} hints that in addition to the previously discussed architectural changes and improvements altering the training data-sets to be more similar to the expected predicted inputs could also improve model performance. 
-\new{This is another critically important future goal, as of course better and more realistic training sets will lead to better performance on real data. In the future we will seek to expand the plausible space of BLR models included in our training set, most urgently including models with 
-more realistic physics and radiative transfer such that our models can learn to predict the amplitude of the response as well as the shape, thus constraining properties of the gas itself in addition to just the geometry and kinematics of the BLR.}
+This is another critically important future goal, as of course better and more realistic training sets will lead to better performance on real data. In the future we will seek to expand the plausible space of BLR models included in our training set, most urgently including models with
+more realistic physics and radiative transfer such that our models can learn to predict the amplitude of the response as well as the shape, thus constraining properties of the gas itself in addition to just the geometry and kinematics of the BLR.
 With large amounts of astronomical time series data expected in the near future from survey campaigns from Roman \citep{ROMAN_overview} and LSST \citep{LSST_manual} it is important that our analysis methods be able to keep up with this deluge of data. While the approach demonstrated here is not a panacea, as transfer learning is still required for each unique continuum lightcurve, this approach may help to ease the analysis burden for the interpretation of many future RM observations. We also plan to explore an even more general version of the (D)CNN in the near future, where instead of learning to each continuum instead the method could take as inputs a continuum and set of emission line lightcurves to generate predictions for a wide variety of sources even faster.
 
 Obtaining the true 2D transfer function for a given source in this way is (physically) model agnostic, and after the true 2D $\Psi$ is recovered physical models can be compared with the resulting outputs to better constrain the fundamental nature of the BLR. There are many possible ways to match 1D observational products such as line profiles, delay profiles, and 1D response functions, and this degeneracy can only be fully broken by directly fitting the 2D velocity-delay maps such as those shown here. There are a growing number of real 2D RM datasets with the quality and cadence required to use this new method to recover transfer functions for real sources \citep{STORM_MODEL_SPECTRA,STORM2_II,RM3c27319,Wang_2025_SouthKoreaRM}, which we can then attempt to match with more physical models of the BLR to better understand its fundamental nature. 
-\new{In the future we hope to apply this method to these datasets as a natural next step, as well as more robustly compare the strengths and weaknesses of various inversion methods to better understand what regimes each method should be employed in.} 
+In the future we hope to apply this method to these datasets as a natural next step, as well as more robustly compare the strengths and weaknesses of various inversion methods to better understand what regimes each method should be employed in.
 
 \section{Acknowledgments}
 This work was supported in part by NSF grants AST-1909711 and AST-2307983, and by an Alfred P. Sloan Research Fellowship (JD). This work utilized the Alpine high performance computing resource at the University of Colorado Boulder. Alpine is jointly funded by the University of Colorado Boulder, the University of Colorado Anschutz, and Colorado State University and with support from NSF grants OAC-2201538 and OAC-2322260. KL is especially grateful to Sajal Gupta for many helpful discussions over the course of the project. While the full ensembles of models are too large to host cheaply on the internet, sample models and code to reproduce the results in this work are available on the corresponding author's \href{https://github.com/kirklong/DCNN}{GitHub}, with the full ensembles and training/validation datasets available on request.
-\new{We are grateful to the anonymous referee for their thorough report, which greatly improved the quality and clarity of this paper.}
-
-% We are grateful to the anonymous referee for their thorough report, which greatly improved the quality of the paper. The code used in this work is available free and open-source on \href{https://github.com/kirklong/BroadLineRegions.jl}{GitHub}. A plain-language summary of this work can be found at \href{www.kirklong.space/RMProblem.html}{on the author's website}. 
+We are grateful to the anonymous referee for their thorough report, which greatly improved the quality and clarity of this paper, particularly in regards to quantifying this new method's performance.
 
 \software{Julia, including:
           \texttt{BroadLineRegions.jl},
@@ -331,10 +328,10 @@ This work was supported in part by NSF grants AST-1909711 and AST-2307983, and b
     \caption{A schematic of the general architecture of our (D)CNN. The indigo boxes represent the input, output, and convolutional layers, with each convolutional layer including a description of the number of channels at that step (we fix $nC = 1$ in this work). The green boxes represent regularization\textemdash BatchNorm (BN) and Dropout (Drop)\textemdash and activation\textemdash ReLU\textemdash layers that occur after each convolutional layer. The red diamonds represent split/join operations, where in the case of joining the number of channels after joining is denoted in parentheses. The left panel shows one split/join and skip connection chain in full, while the right panel showcases that our model architecture essentially performs these operations twice. Note that while the full 2D schematic is shown in the 1D case the general pattern is the same but the convolutions are 1D and only along the time dimension thus there are $\sim$ half the number of layers than in the 2D case. When the number of velocity channels is increased the gradients become large in the 2D case, and thus sometimes memory requirements necessitate using only one split/concat loop instead of both.}
     \label{fig:model}
 \end{figure*}
+A flowchart for the (D)CNN model architecture is shown in Figure \ref{fig:model}, as described in the main text in Section \ref{sec:models}.
 
-\new{\section{(D)CNN hyperparameters}\label{sec:hyperparams}}
-
-\begingroup\color{red}
+\section{(D)CNN hyperparameters}\label{sec:hyperparams}
+Table \ref{tab:hyperparams} includes a summary of all of the hyperparameters ued in training our (D)CNN models.
 \startlongtable
 \begin{deluxetable*}{lll}
 \tablecaption{Summary of (D)CNN hyperparameters used in this work. Hyperparameters marked ``Tuned'' were determined experimentally with a variety of possibilities tried in testing,
@@ -369,11 +366,9 @@ LR reduction on plateau & Halved (up to $2\times$) & Fixed \\
 Post-training ensemble cut & $1\sigma$ from mean validation loss & Tuned \\
 \enddata
 \end{deluxetable*}
-\endgroup
-\new{\section{1D transfer function parameter ranges}\label{sec:1Dparams}
-The parameter ranges used to generate each class of 1D synthetic transfer function for training are listed in Table~\ref{tab:1Dparams}. All model types are generated over a peak delay range of $\tau_\text{peak}\in[5,25]$~days sampled uniformly. For BLR kinematic models (disk-wind and cloud), either the mean BLR radius $\bar{r}$ or the black hole mass factor $M_\text{fac}$ is sampled directly with equal probability; the other quantity is derived from the peak delay constraint.}
+\section{1D transfer function parameter ranges}\label{sec:1Dparams}
+The parameter ranges used to generate each class of 1D synthetic transfer function for training are listed in Table~\ref{tab:1Dparams}. All model types are generated over a peak delay range of $\tau_\text{peak}\in[5,25]$~days sampled uniformly. For BLR kinematic models (disk-wind and cloud), either the mean BLR radius $\bar{r}$ or the black hole mass factor $M_\text{fac}$ is sampled directly with equal probability; the other quantity is derived from the peak delay constraint. A histogram showing the assumed virial product distribution used in training (for both 1D and 2D cases) is shown in Figure \ref{fig:viralDistribution}.
 
-\begingroup\color{red}
 \startlongtable
 \begin{deluxetable*}{llll}
 \tablecaption{Parameter ranges for each class of 1D synthetic transfer function used in training. The peak delay $\tau_\text{peak}\in[5,25]$~days is shared by all model types and sampled uniformly.\label{tab:1Dparams}}
@@ -413,11 +408,19 @@ BLR Cloud & Inclination ($i$) & $5^\circ$--$85^\circ$ & Uniform \\
  & Opening angle ($\theta_o$) & $0^\circ$--$90^\circ$ & Uniform \\
  & Number of clouds ($N_\text{clouds}$) & 500{,}000 & Fixed \\
 \enddata
-\tablenotetext{a}{Either $\bar{r}$ or $M_\text{fac}$ is sampled directly (50\% probability each); the other is derived from the peak delay constraint.}
+\tablenotetext{a}{Either $\bar{r}$ or $M_\text{fac}$ is sampled directly (50\% probability each); the other is derived from the peak delay constraint. Given the complicated nature of this sampling, we include 
+a plot showing the resulting distribution of virial products used in training in Figure \ref{fig:viralDistribution}.}
 \end{deluxetable*}
-\endgroup
 
-\begingroup\color{red}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.48\textwidth,keepaspectratio]{bias_analysis_training_virial_product.pdf}
+    \caption{Distribution of virial products ($c\bar{\tau}\Delta v^2/G$) for all of our samples, as calculated from the mean $\Delta v^2$ of the velocity distribution and mean delay $\bar{\tau}$ for each sample.
+    We show the virial product calculated this way as the ``shape''-based BLRs do not have intrinsic black hole masses or radii, and thus this approximates the distribution of ``masses'' used in training.}
+    \label{fig:viralDistribution}
+\end{figure}
+
+\newcommand{\twodnotecell}[1]{\parbox[t]{5cm}{#1}}
 \section{Sample 2D transfer functions and trailed spectrograms as well as 2D transfer function parameter ranges}\label{sec:sample2D}
 \begin{figure*}[!htb]
     \centering
@@ -427,33 +430,32 @@ BLR Cloud & Inclination ($i$) & $5^\circ$--$85^\circ$ & Uniform \\
     \label{fig:2DSamples}
 \end{figure*}
 
-\new{The parameter ranges for the 2D velocity-delay transfer functions used in training are listed in Table~\ref{tab:2Dparams}. Parameters shared with the 1D models (Table~\ref{tab:1Dparams}) are not repeated\textemdash only parameters that are unique to the 2D case or that differ from the 1D values are listed.}
+The parameter ranges for the 2D velocity-delay transfer functions used in training are listed in Table~\ref{tab:2Dparams}. Parameters shared with the 1D models (Table~\ref{tab:1Dparams}) are not repeated\textemdash only parameters that are unique to the 2D case or that differ from the 1D values are listed. Figure \ref{fig:2DSamples} showcases 2D example transfer functions for each class of sample included in training.
 
 \startlongtable
-\begin{deluxetable*}{lllp{5cm}}
+\begin{deluxetable*}{llll}
 \label{sec:2Dparams}
 \tablecaption{Parameter ranges for 2D synthetic transfer functions. Only parameters unique to the 2D case or that differ from the 1D values (Table~\ref{tab:1Dparams}) are listed.\label{tab:2Dparams}}
 \tablecolumns{4}
 \tablehead{Model & Parameter & Range (2D) & Notes vs.\ 1D}
 \startdata
-Exponential Decay & Velocity scale ($\Psi_{v,\max}$) & $U(\lvert v_\text{min}/10\rvert,\;\lvert 3\,v_\text{max}/4\rvert)$ & Velocity profile $\propto e^{-|v|/\Psi_{v,\max}}$ \\
+Exponential Decay & Velocity scale ($\Psi_{v,\max}$) & $U(\lvert v_\text{min}/10\rvert,\;\lvert 3\,v_\text{max}/4\rvert)$ & \twodnotecell{Velocity profile $\propto e^{-|v|/\Psi_{v,\max}}$} \\
 \hline
-Gaussian & Velocity scale ($\Psi_{v,\max}$) & $U(\lvert v_\text{min}/10\rvert,\;\lvert 3\,v_\text{max}/4\rvert)$ & Center of Gaussian in velocity \\
- & Velocity width ($\sigma_v$) & 100--$\min(2000,\,\Psi_{v,\max})$~km\,s$^{-1}$ & Capped by $\Psi_{v,\max}$ \\
+Gaussian & Velocity scale ($\Psi_{v,\max}$) & $U(\lvert v_\text{min}/10\rvert,\;\lvert 3\,v_\text{max}/4\rvert)$ & \twodnotecell{Center of Gaussian in velocity} \\
+ & Velocity width ($\sigma_v$) & 100--$\min(2000,\,\Psi_{v,\max})$~km\,s$^{-1}$ & \twodnotecell{Capped by $\Psi_{v,\max}$} \\
 \hline
-Elliptical Ring & Time width ($\sigma_t$) & 1--$\min(10,\,\tau_\text{peak})$~days & Now an actual ring in $(\tau, v)$ as opposed to approximating two Gaussians at different times \\
- & Velocity width & $U(\lvert v_\text{min}/10\rvert,\;\lvert v_\text{max}/2\rvert)$ & New parameter \\
- & Ellipse width & 0.5--5.0 & New parameter \\
- & Time center ($\tau_c$) & $\tau_\text{peak}$--$2\,\tau_\text{peak}$ & New parameter \\
+Elliptical Ring & Time width ($\sigma_t$) & 1--$\min(10,\,\tau_\text{peak})$~days & \twodnotecell{Now an actual ring in $(\tau, v)$ as opposed to approximating two Gaussians at different times} \\
+ & Velocity width & $U(\lvert v_\text{min}/10\rvert,\;\lvert v_\text{max}/2\rvert)$ & \twodnotecell{New parameter} \\
+ & Ellipse width & 0.5--5.0 & \twodnotecell{New parameter} \\
+ & Time center ($\tau_c$) & $\tau_\text{peak}$--$2\,\tau_\text{peak}$ & \twodnotecell{New parameter} \\
 \hline
-Accretion Disk & Velocity dependence & $\lambda = 1/(1-v/c)$ & Doppler shifted per velocity bin \\
+Accretion Disk & Velocity dependence & $\lambda = 1/(1-v/c)$ & \twodnotecell{Doppler shifted per velocity bin} \\
 \hline
-BLR Disk-Wind & Mean radius ($\bar{r}$) & 500--1200~$r_s$ & Slightly narrower than 1D to focus model learning at shorter times\\
+BLR Disk-Wind & Mean radius ($\bar{r}$) & 500--1200~$r_s$ & \twodnotecell{Slightly narrower than 1D to focus model learning at shorter times}\\
 \hline
-BLR Cloud & (All parameters same as 1D) & \nodata & Velocity structure intrinsic to model \\
+BLR Cloud & (All parameters same as 1D) & \nodata & \twodnotecell{Velocity structure intrinsic to model} \\
 \enddata
 \end{deluxetable*}
-\endgroup
 
 \section{Analytic face-on accretion disk prescription}\label{sec:KDM}
 For a face-on accretion disk with a power-law temperature profile, $T \propto r^{-b}$, the delay distribution is given by the following proportionality:
@@ -463,78 +465,81 @@ For a face-on accretion disk with a power-law temperature profile, $T \propto r^
 \end{equation}
 
 With $x = (\lambda_0/\lambda)(\tau/\tau_0)^b$ and the dimensionless factor $W(x) = \frac{x^2/2}{\cosh x -1}$. We assume a steady-state disk model, which gives $b=3/4$ and $3b-2=1/4$. We keep the peak wavelength $\lambda_0$ fixed, and alter the characteristic time $\tau_0$ in generating our models of this kind, with each being normalized independently such that we do not specify an exact temperature or other physical quantities for the disk but instead only keep the proportionalities above consistent.
-\new{\section{(D)CNN systematic bias analysis}\label{sec:bias}
-To quantify whether the (D)CNN models exhibit systematic directional bias rather than purely random errors, we compute flux-weighted first and second moments (centroid and RMS width) of both the predicted and ground-truth transfer functions across the full test sets. 
-For the 1D models ($N_{\rm{test}}\sim 4\times 10^4$) we measure the centroid of the lag $\bar{\tau}$ and the lag width $\sigma_\tau$, 
-while for the 2D models ($N_{\rm{test}}\sim 10^4$) we additionally measure the centroid of the velocity $\bar{v}$ and the velocity width $\sigma_v$. 
-We can then compare the per-sample bias ($\Delta = \text{predicted} - \text{truth}$) and investigate if there are any systematic trends in the distribution of biases with 
-respect to these four quantities. 
+\section{(D)CNN systematic bias analysis}\label{sec:bias}
+To quantify whether the (D)CNN models exhibit systematic directional bias rather than purely random errors, we compute flux-weighted first and second moments (centroid and RMS width) of both the predicted and ground-truth transfer functions across the full test sets.
+For the 1D models ($N_{\rm{test}}\sim 4\times 10^4$) we measure the centroid of the lag $\bar{\tau}$ and the lag width $\sigma_\tau$,
+while for the 2D models ($N_{\rm{test}}\sim 10^4$) we additionally measure the centroid of the velocity $\bar{v}$ and the velocity width $\sigma_v$.
+We can then compare the per-sample bias ($\Delta = \text{predicted} - \text{truth}$) and investigate if there are any systematic trends in the distribution of biases with
+respect to these four quantities.
 
-Figures~\ref{fig:bias1Dscatter} and \ref{fig:bias1Dhist} show these results for the 1D cases (using the missing data test set and corresponding ensemble of models), 
-while Figures~\ref{fig:bias2Dscatter} and \ref{fig:bias2Dhist} show the 2D results. 
-In all cases the models exhibit a systematic trend towards underrepresenting the ground-truth delay values in both centroid and width, 
-meaning predictions are systematically shifted toward shorter delays and narrower profiles. 
-The velocity quantities show comparatively smaller fractional biases, indicating relatively random noise about the ground truth. This is 
-consistent with our visual observations, as we often say that in velocity space the models would have the right morphology but could be off by a $\sim$ pixel 
-in width in velocity space, and the models struggle in general with longer delays, an error that is physically motivated by the nature of the problem. 
-The shaded ribbons in the histogram panels span the 16th--84th percentile range of each bias distribution, 
+Figures~\ref{fig:bias1Dscatter} and \ref{fig:bias1Dhist} show these results for the 1D cases (using the missing data test set and corresponding ensemble of models),
+while Figures~\ref{fig:bias2Dscatter} and \ref{fig:bias2Dhist} show the 2D results.
+In all cases the models exhibit a systematic trend towards underrepresenting the ground-truth delay values in both centroid and width,
+meaning predictions are systematically shifted toward shorter delays and narrower profiles.
+The velocity quantities show comparatively smaller fractional biases, indicating relatively random noise about the ground truth. This is
+consistent with our visual observations, as we often say that in velocity space the models would have the right morphology but could be off by a $\sim$ pixel
+in width in velocity space, and the models struggle in general with longer delays, an error that is physically motivated by the nature of the problem.
+The shaded ribbons in the histogram panels span the 16th--84th percentile range of each bias distribution,
 with the asymmetric uncertainties on the mean derived from these same percentiles.
 
-Note that while the labels on the axes are in units of days and km/s, really both the delay and velocity axes are simply in units of array elements, 
-where here we have shown them 
-in days and km/s as this the scale we used for our models in the training set, but in principle both could be rescaled. The models used in training 
-were generated with a cadence of 1 day (such that shifting 1 array element = shifting 1 day) and a velocity binning of 400 km/s 
-(such that shifting 1 array element = shifting 400 km/s). Thus the mean offset of $\sim$ 2 days corresponds to the models on average being wrong 
-by about 2 array elements in the delay dimension, while the mean offset of just $\sim$ -1 km/s in the velocity dimensions indicates that on average 
-the models are not systematically shifted in velocity space and instead the errors are more random in nature (i.e. shifted by a bin either positively or negatively 
+Note that while the labels on the axes are in units of days and km/s, really both the delay and velocity axes are simply in units of array elements,
+where here we have shown them
+in days and km/s as this the scale we used for our models in the training set, but in principle both could be rescaled. The models used in training
+were generated with a cadence of 1 day (such that shifting 1 array element = shifting 1 day) and a velocity binning of 400 km/s
+(such that shifting 1 array element = shifting 400 km/s). Thus the mean offset of $\sim$ 2 days corresponds to the models on average being wrong
+by about 2 array elements in the delay dimension, while the mean offset of just $\sim$ -1 km/s in the velocity dimensions indicates that on average
+the models are not systematically shifted in velocity space and instead the errors are more random in nature (i.e. shifted by a bin either positively or negatively
 with equal probability).
 
-Note that from the scatter plots (Figures~\ref{fig:bias1Dscatter} and \ref{fig:bias2Dscatter}) it is clear that the models almost \textit{never} overpredict 
-the mean delay, and they consistently struggle with the longest delay values as expected. The turn off point could be used in future studies to motivate 
-the length of the training set in time space, i.e. if here our models struggle to predict delays longer than $\sim$ 1/20th of the total time shown in 
-training perhaps this could be mitigated in the future by simply training on longer time series, with the length set by the maximum delay one 
-wishes to most accurately predict. There is also some spread at lower delays, but this bias is less systematic and more random in nature. Also 
-note that the spread of predicted widths is larger than the spread of predicted centroids, which is physically motivated 
-as well as the width is more difficult to predict than the centroid. Interestingly it appears that these biases are correlated with each other, 
-such that when a model underpredicts the centroid it also tends to underpredict the width. From these panels it is clear that future iterations of 
-this methodology should focus on mitigating this bias in the delays, while the velocity predictions appear to be relatively unbiased in any systematic 
-way by comparison.
-}  
+Note that from the scatter plots (Figures~\ref{fig:bias1Dscatter} and \ref{fig:bias2Dscatter}) it is clear that the models almost \textit{never} overpredicts
+the mean delay, and they consistently struggle with the longest delay values as expected given that the input lightcurves are limited to $\sim$ 3 years in duration in this scaling.
+Thus this is likely not a limitation of this method but instead a limitation of the training set, as the model has not been shown enough information to robustly cover times at longer delays
+given the length of the input lightcurves.
+The turn off point could be used in future studies to motivate
+the length of the training set in time space, i.e. if here our models struggle to predict delays longer than $\sim$ 1/10th of the total time shown in
+training this could likely be mitigated in the future by simply training on longer time series, with the length set by the maximum delay one
+wishes to most accurately predict. Previous analytic calculations for reverberation mapping campaigns suggest that the duration of observations must exceed
+the desired timescale by a factor of at least three \citep{Horne2004_RM_requirements}, thus our model performance starting to degrade over $\sim$ 1/10th of the input lightcurve duration is a bit smaller
+yet consistent with this idea. Our models are not graded on their ability to recover the mean delay, however, but instead the gradients will be largest where the signal is largest which is usually at
+shorter delays, but if in the future we wanted to better approach the theoretical limit we could include an explicit penalty in the loss function for wrongly predicting the mean delay.
 
-\begingroup\color{red}
+There is also larger spread at lower delays, and in particular there appears to be a second population that is slightly farther off the 1:1 line than the rest of the samples.
+This subpopulation is almost entirely composed of the hardest classes of samples the model was exposed to\textemdash physical BLRs + combined, multi-component BLRs\textemdash confirming that the most
+complicated structures are the hardest to accurately recover. Also
+note that the spread of predicted widths is larger than the spread of predicted centroids, which is physically motivated
+as well as the width is more difficult to predict than the centroid. Interestingly it appears that these biases are correlated with each other,
+such that when a model underpredicts the centroid it also tends to underpredict the width. From these panels it is clear that future iterations of
+this methodology should be aware of this potential bias in the delays, and in particular design training sets that are sensitive to this issue, while the velocity predictions appear to be relatively unbiased in any systematic
+way by comparison.
+
 \begin{figure*}[!htb]
     \centering
     \includegraphics[width=0.87\textwidth,keepaspectratio]{bias_analysis_1D_scatter.pdf}
     \caption{Predicted vs.\ ground-truth moment statistics for the 1D test set ($N_{\rm{test}}\sim 4\times 10^4$ samples). Left: flux-weighted centroid lag $\bar{\tau}$. Right: RMS lag width $\sigma_\tau$. The dashed line shows the 1:1 relation.}
     \label{fig:bias1Dscatter}
 \end{figure*}
-\endgroup
 
-\begingroup\color{red}
 \begin{figure*}[!htb]
     \centering
     \includegraphics[width=0.87\textwidth,keepaspectratio]{bias_analysis_1D_histograms.pdf}
     \caption{Distributions of per-sample bias $\Delta = \text{predicted} - \text{truth}$ for the 1D test set. Left: centroid lag bias $\Delta\bar{\tau}$. Right: lag width bias $\Delta\sigma_\tau$. The vertical dashed line marks zero; the solid line marks the mean bias with asymmetric 16th--84th percentile uncertainties as labeled. The shaded region spans the 16th--84th percentile of the bias distribution. Note that the time axis is in units of array elements; the underlying physical timescale is set by the cadence of the input lightcurve.}
     \label{fig:bias1Dhist}
 \end{figure*}
-\endgroup
 
-\begingroup\color{red}
 \begin{figure*}[!htb]
     \centering
     \includegraphics[width=0.87\textwidth,keepaspectratio]{bias_analysis_2D_scatter.pdf}
-    \caption{Predicted vs.\ ground-truth moment statistics for the 2D test set ($N_{\rm{test}}\sim 10^4$ samples). Top row: centroid lag $\bar{\tau}$ and centroid velocity $\bar{v}$. Bottom row: RMS lag width $\sigma_\tau$ and velocity width $\sigma_v$. The dashed line shows the 1:1 relation.}
+    \caption{Predicted vs.\ ground-truth moment statistics for the 2D test set ($N_{\rm{test}}\sim 10^4$ samples). Top row: centroid lag $\bar{\tau}$ and centroid of mean squared velocity $\langle v^2\rangle$\textemdash we show the
+    mean squared velocity centroid instead of just the unsquared velocity centroid as many of the training set samples have an average velocity of zero but show distinct structures away from zero velocity. Bottom row: RMS lag width $\sigma_\tau$ and velocity width $\sigma_v$. The dashed line shows the 1:1 relation.
+    Note that in combining these panels one has a sense for how the model recovers the virial product of the system, which it thus does quite well for systems with delays shorter than the maximum.}
     \label{fig:bias2Dscatter}
 \end{figure*}
-\endgroup
 
-\begingroup\color{red}
 \begin{figure*}[!htb]
     \centering
     \includegraphics[width=0.87\textwidth,keepaspectratio]{bias_analysis_2D_histograms.pdf}
     \caption{Distributions of per-sample bias $\Delta = \text{predicted} - \text{truth}$ for the 2D test set. Top row: centroid lag bias $\Delta\bar{\tau}$ and centroid velocity bias $\Delta\bar{v}$. Bottom row: lag width bias $\Delta\sigma_\tau$ and velocity width bias $\Delta\sigma_v$. Axes are clipped to the 0.5th--99.5th percentile to suppress extreme outliers. Annotations and shading follow the same convention as Figure~\ref{fig:bias1Dhist}.}
     \label{fig:bias2Dhist}
 \end{figure*}
-\endgroup
 
 \end{document}
